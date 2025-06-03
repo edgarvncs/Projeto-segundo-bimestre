@@ -13,14 +13,23 @@ No menu o player pode começar o jogo pressionando o número 1, pode ir para a t
 Os elementos desse jogo são representados pelos respectivos caracteres:
 
 1- "@" representa uma chave.
+
 2- "&" representa o player.
+
 3- "P" representa um NPC.
+
 4- "*" representa uma parede.
+
 5- "D" e "=" representam, respectivamente, "Porta fechada" e "Porta aberta".
+
 6- "O" representa um botão.
+
 7- "#" representa um espinho.
+
 8- ">" representa um teletransporte.
+
 9- "X" representa um monstro nível 1.
+
 10- "V" representa um monstro nível 2.
 
 Obs: O monstro nível 1 (X) está presente nas fases 2 e 3, representando respectivamente Drogo e Bapirromet.
