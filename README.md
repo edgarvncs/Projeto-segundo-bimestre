@@ -1,7 +1,7 @@
 # Projeto-segundo-bimestre
 
 Este projeto de jogo no estilo Dungeon Crawler, solicitado pelo professor Pedro Girotto, foi feito pelos alunos Matheus Sá e Edgar Teófilo, com o objetivo de aprimorar os nossos conhecimentos de programação 
-estruturada na linguagem C, por meio do desenvolvimento de um jogo chamado Dungeon Crawler.
+estruturada na linguagem C, por meio do desenvolvimento de um jogo chamado "O Segredo de Elthar".
 
 O jogo é do estilo aventura/puzzle onde o objetivo é o jogador conseguir passar de três fases. Em cada fase o jogador deve se movimentar para pegar uma chave para abrir a porta fechada. Nas fases você encontrará 
 NPCs que irão dar informações importantes. Você também encontrará monstros e outros desafios a serem enfrentados.
