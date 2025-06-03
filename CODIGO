@@ -1,0 +1,599 @@
+#include <stdio.h>
+#include <conio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+#define TAM 10
+#define TAM2 20 
+#define TAM3 40
+
+void teleportar(char mapa[TAM3][TAM3], int *jogadorX, int *jogadorY, int origemX, int origemY) {
+    for(int i = 0; i < TAM3; i++) {
+        for(int j = 0; j < TAM3; j++) {
+            if(mapa[i][j] == '>' && (i != origemX || j != origemY)) {
+                *jogadorX = i;
+                *jogadorY = j;
+                printf("Voce foi teleportado para (%d, %d)!\n", i, j);
+                system("pause");
+                return;
+            }
+        }
+    }
+}
+void fase1();
+void fase2();
+void fase3();
+void desenha(char mapa[TAM][TAM], int x, int y);
+int podeMover(char mapa[TAM][TAM], int nx, int ny);
+int interage(char mapa[TAM][TAM], int x, int y);
+void finalizarJogo(int vitoria);
+
+// Variáveis globais
+int px=5, py=5, temChave = 0;
+
+// Vila: P = NPC, @ = chave, D = porta fechada, & = jogador
+char vila[TAM][TAM] = {
+    {'*','*','*','*','*','*','*','*','*','*'},
+    {'*',' ',' ',' ',' ',' ','*',' ','P','*'},
+    {'*',' ',' ',' ',' ',' ','*',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ','*','*',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*',' ',' ',' ','*','*','*','*'},
+    {'*','@','*',' ',' ',' ',' ',' ','D','*'},
+    {'*','*','*','*','*','*','*','*','*','*'}
+};
+
+// Variáveis para a fase 3
+char mapaF3[TAM3][TAM3 + 1];
+int jogadorX, jogadorY, portaAberta, vidas;
+int mx, my, vx, vy; // Monstros
+
+void desenha(char mapa[TAM][TAM], int x, int y) {
+    system("cls");
+    for(int i=0; i<TAM; i++) {
+        for(int j=0; j<TAM; j++) {
+            if(i == x && j == y)
+                printf("& ");
+            else
+                printf("%c ", mapa[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int podeMover(char mapa[TAM][TAM], int nx, int ny) {
+    if(nx < 0 || nx >= TAM || ny < 0 || ny >= TAM) return 0;
+    if(mapa[nx][ny] == '*') return 0;
+    return 1;
+}
+
+int interage(char mapa[TAM][TAM], int x, int y) {
+    // Interage com o que está na mesma posição do jogador
+    char elem = mapa[x][y];
+    if(elem == 'P') {
+        printf("Anciao Altherion: Elion, voce foi o escolhido para se aventurar na Cripta dos Ecos. Encontre a chave (@). Ela abrira a porta do caminho perdido (D)...\n");
+        system("pause");
+        return 0;
+    }
+    if(elem == '@') {
+        temChave = 1;
+        mapa[x][y] = ' ';
+        printf("Voce pegou a chave!\n");
+        system("pause");
+        return 0;
+    }
+    if(elem == 'D') {
+        if(temChave) {
+            mapa[x][y] = '='; // Porta aberta
+            printf("Voce abriu a porta!\n");
+            system("pause");
+            return 1;
+        } else {
+            printf("A porta esta fechada. Encontre a chave.\n");
+            system("pause");
+            return 0;
+        }
+    }
+    printf("Nada para interagir aqui.\n");
+    system("pause");
+    return 0;
+}
+
+void finalizarJogo(int vitoria) {
+    system("cls");
+    if(vitoria) {
+        printf("Voce venceu!! Parabens e obrigado por jogar!\n");
+    } else {
+        printf("Game over. Tente novamente.\n");
+    }
+    system("pause");
+    exit(0);
+}
+
+void moverJogadorF3(int dx, int dy) {
+    int novoX = jogadorX + dx;
+    int novoY = jogadorY + dy;
+    char destino = mapaF3[novoX][novoY];
+
+    if(destino == '*') return;
+    if(destino == 'D' && !portaAberta) return;
+    
+    if(destino == '@') {
+        portaAberta = 1;
+        printf("Voce pegou a chave! A porta esta aberta agora.\n");
+        system("pause");
+    }
+    
+    if(destino == '#') {
+        vidas--;
+        if(vidas <= 0) {
+            finalizarJogo(0);
+        }
+        mapaF3[jogadorX][jogadorY] = ' ';
+        jogadorX = 1;
+        jogadorY = 1;
+        mapaF3[jogadorX][jogadorY] = '&';
+        return;
+    }
+    
+    if(destino == '>') {
+    // Encontra o outro teletransporte
+    for(int i = 0; i < TAM3; i++) {
+        for(int j = 0; j < TAM3; j++) {
+            if(mapaF3[i][j] == '>' && (i != novoX || j != novoY)) {
+                mapaF3[jogadorX][jogadorY] = ' ';
+                jogadorX = i;
+                jogadorY = j;
+                printf("Voce foi teleportado!\n");
+                system("pause");
+                return;
+            }
+        }
+    }
+}
+
+   if (mapaF3[jogadorX][jogadorY] != '>') {
+    mapaF3[jogadorX][jogadorY] = ' ';
+}
+    jogadorX = novoX;
+    jogadorY = novoY;
+    mapaF3[jogadorX][jogadorY] = '&';
+}
+
+void moverMonstrosF3() {
+      int dir = rand() % 4;
+    int novoMX = mx, novoMY = my;
+    if(dir == 0) novoMX--;
+    else if(dir == 1) novoMX++;
+    else if(dir == 2) novoMY--;
+    else if(dir == 3) novoMY++;
+    
+    if(novoMX >= 0 && novoMY >= 0 && novoMX < TAM3 && novoMY < TAM3) {
+        if(mapaF3[novoMY][novoMX] == ' ' || mapaF3[novoMY][novoMX] == '&') {
+            mapaF3[my][mx] = ' ';
+            mx = novoMX;
+            my = novoMY;
+            mapaF3[my][mx] = 'X';
+        }
+    }
+    
+    // Movimento do monstro nível 2 (V) - persegue o jogador
+    int novoVX = vx, novoVY = vy;
+    if(vx < jogadorX) novoVX++;
+    else if(vx > jogadorX) novoVX--;
+    
+    if(vy < jogadorY) novoVY++;
+    else if(vy > jogadorY) novoVY--;
+    
+    if(novoVX >= 0 && novoVY >= 0 && novoVX < TAM3 && novoVY < TAM3) {
+        if(mapaF3[novoVX][novoVY] == ' ' || mapaF3[novoVX][novoVY] == '&') {
+            mapaF3[vx][vy] = ' ';
+            vx = novoVX;
+            vy = novoVY;
+            mapaF3[vx][vy] = 'V';
+        }
+    }
+}
+
+   
+
+
+void verificarColisaoMonstros() {
+    if((jogadorX == mx && jogadorY == my) || (jogadorX == vx && jogadorY == vy)) {
+        vidas--;
+        if(vidas <= 0) {
+            finalizarJogo(0);
+        }
+        mapaF3[jogadorX][jogadorY] = ' ';
+        jogadorX = 1;
+        jogadorY = 1;
+        mapaF3[jogadorX][jogadorY] = '&';
+    }
+}
+
+void fase1() {
+    char mapaF1[TAM][TAM] = {
+        {'*','*','*','*','*','*','*','*','*','*'},
+        {'*',' ','*','@',' ',' ',' ',' ','*','*'},
+        {'*',' ','*','*','*','*','*',' ','*','*'},
+        {'*',' ',' ',' ',' ',' ',' ',' ','*','*'},
+        {'*',' ','*','*','*','*','*','*','*','*'},
+        {'*',' ','*',' ',' ',' ','D',' ','*','*'},
+        {'*',' ','*',' ',' ',' ',' ',' ','*','*'},
+        {'*',' ','*','*','*','*','*',' ','*','*'},
+        {'*',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+        {'*','*','*','*','*','*','*','*','*','*'}
+    };
+    int x=1, y=1, chave=0;
+    while(1) {
+        desenha(mapaF1, x, y);
+        printf("Fase 1 - WASD para andar, i para interagir, q para voltar para o menu.\n");
+        char c = _getch();
+        if(c >= 'A' && c <= 'Z') c += 32;
+        if(c == 'q') break;
+        int nx = x, ny = y;
+        if(c == 'w') nx--;
+        else if(c == 's') nx++;
+        else if(c == 'a') ny--;
+        else if(c == 'd') ny++;
+        else if(c == 'i') {
+            if(mapaF1[x][y] == '@') {
+                chave = 1;
+                mapaF1[x][y] = ' ';
+                printf("Voce pegou a chave da fase 1!\n");
+                system("pause");
+            } else if(mapaF1[x][y] == 'D') {
+                if(chave) {
+                    mapaF1[x][y] = '='; // Porta aberta
+                    printf("Voce abriu a porta!\n");
+                    system("pause");
+                    fase2();
+                    return;
+                } else {
+                    printf("A porta esta fechada. Ache a chave.\n");
+                    system("pause");
+                }
+            } else {
+                printf("Nada para interagir aqui.\n");
+                system("pause");
+            }
+            continue;
+        }
+        if(podeMover(mapaF1, nx, ny)) {
+            x = nx;
+            y = ny;
+        }
+    }
+}
+
+void fase2() {
+    static char mapaF2[TAM2][TAM2 + 1] = {
+        {'*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*'},
+        {'*',' ','*',' ',' ',' ','*',' ',' ',' ',' ','*',' ','P',' ','*',' ',' ','D','*'},
+        {'*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ','*',' ','*'},
+        {'*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ','*',' ','*'},
+        {'*',' ','*',' ',' ',' ','*',' ',' ',' ',' ','*',' ',' ',' ','*',' ','*',' ','*'},
+        {'*',' ','*','*','*','*','*','*',' ',' ','*','*','*','*','*','*',' ','*','*','*'},
+        {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+        {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+        {'*',' ','*','*','*','*','*','*','*','*','*','*','*','*','*','*',' ','*','*','*'},
+        {'*',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ',' ','O','*',' ',' ',' ',' ',' ',' ',' ','#',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ','*','*','*',' ',' ',' ',' ',' ',' ',' ','#',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ','*','*','*','*','*',' ',' ','*','*','*','*',' ',' ',' ',' ','*'},
+        {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*',' ','*','*','*','*','*','*',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ',' ','@',' ','*',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ','*'},
+        {'*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*'}
+    };
+
+    int i, j;
+    int x = 1, y = 1, chaveF2 = 0, espinhosAtivos = 1;
+    int mx = 10, my = 10;
+    
+    while(1) {
+        system("cls");
+        
+        for(i = 0; i < TAM2; i++) {
+            for(j = 0; j < TAM2; j++) {
+                if(i == x && j == y)
+                    printf("& ");
+                else if(i == mx && j == my)
+                    printf("X ");
+                else
+                    printf("%c ", mapaF2[i][j]);        
+            }
+            printf("\n");
+        }
+        printf("Fase 2 - WASD para andar, i para interagir, q para voltar ao menu.\n");
+        char c = _getch();
+        if(c >= 'A' && c <= 'Z') c += 32;
+        if(c == 'q') break;
+        
+        int nx = x, ny = y;
+        if(c == 'w') nx--;
+        else if(c == 's') nx++;
+        else if(c == 'a') ny--;
+        else if(c == 'd') ny++;
+        else if(c == 'i') {
+            char elem = mapaF2[x][y];
+            if(elem == '@') {
+                chaveF2 = 1;
+                mapaF2[x][y] = ' ';
+                printf("Voce pegou a chave da fase 2!\n");
+                system("pause");
+            } else if(elem == 'D') {
+                if(chaveF2) {
+                    mapaF2[x][y] = '='; // Porta aberta
+                    printf("Voce abriu a porta e completou a fase 2!\n");
+                    system("pause");
+                    fase3();
+                    return;
+                } else {
+                    printf("A porta esta fechada. Ache a chave.\n");
+                    system("pause");
+                }
+            } else if(elem == 'O') {
+                if(espinhosAtivos) {
+                    for(int k = 11; k <= 13; k++) {
+                        mapaF2[k][14] = ' ';
+                    }
+                    mapaF2[5][7] = '#';
+                    mapaF2[6][7] = '#';
+                    mapaF2[7][7] = '#';
+                    espinhosAtivos = 0;
+                    printf("Voce apertou o botão e os espinhos sumiram!\n");
+                    system("pause");
+                } else {
+                    printf("O botao ja foi ativado.\n");
+                    system("pause");
+                }
+            }else if(elem == 'P'){
+			printf("Murmurador: Cuidado com os lugares que voce se mete, existem coisas que nao gostam de serem incomodadas por aqui...\n");
+			system("pause");
+			} else {
+                printf("Nada para interagir aqui.\n");
+                system("pause");
+            }
+            continue;
+        }
+        if(nx >= 0 && ny >= 0 && nx < TAM2 && ny < TAM2) {
+            if(mapaF2[nx][ny] != '*' && mapaF2[nx][ny] != '#') {
+                x = nx;
+                y = ny;
+            }
+        }
+        
+        // Movimento do monstro
+        int dir = rand() % 4;
+        int mx_novo = mx, my_novo = my;
+        if(dir == 0) mx_novo--;
+        else if(dir == 1) mx_novo++;
+        else if(dir == 2) my_novo--;
+        else if(dir == 3) my_novo++;
+        
+        if(mx_novo >= 0 && mx_novo < TAM2 && my_novo >= 0 && my_novo < TAM2) {
+            if(mapaF2[mx_novo][my_novo] != '*' && mapaF2[mx_novo][my_novo] != '#') {
+                mx = mx_novo;
+                my = my_novo;    
+            }
+        }
+        
+        if(mx == x && my == y) {
+            printf("O monstro te comeu! Reiniciando a fase...\n");
+            system("pause");
+            return fase2();
+        }
+    }
+}
+
+char objetoProximo(int x, int y, char objeto) {
+    if (mapaF3[x-1][y] == objeto) return mapaF3[x-1][y];
+    if (mapaF3[x+1][y] == objeto) return mapaF3[x+1][y];
+    if (mapaF3[x][y-1] == objeto) return mapaF3[x][y-1];
+    if (mapaF3[x][y+1] == objeto) return mapaF3[x][y+1];
+    return '\0';
+}
+
+
+void fase3() {
+    // Inicializa o mapa da fase 3
+    char mapaInicial[TAM3][TAM3 + 1] = {
+    {'*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*'},
+    {'*','&',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*','*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','>',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ','>',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*','*','*','*','*',' ',' ',' ',' ',' ','#',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ','*','O','*',' ',' ',' ',' ',' ','#',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*','*',' ','*',' ',' ',' ',' ',' ','#',' ',' ',' ','*','*',' ','*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ','*',' ','*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ','*','*',' ','*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*','*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ',' ','*',' ',' ',' ','@',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ',' ',' ',' ','*',' ','*',' ',' ',' ','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*','*','*','*',' ','*','*','*','*','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*',' ',' ',' ',' ','*','*',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*',' ','*','*','*','*','*',' ','*','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*',' ','*','*','*','*','*',' ','*','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ',' ','*','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ','*','*','*','*','*',' ','*','*','*','*',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ',' ',' ',' ',' ','*',' ','*',' ',' ','*',' ',' ',' ','*','*','*','*','*','*','*','*','*','*','*','*','*',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*',' ',' ',' ',' ',' ',' ','*',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ','*','*','*','*','*','*','*','*',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*','*','*','*','*','*','*','*','*','*','*',' ',' ',' ','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*','*','*','*','*','*','*','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*','*','*','*','*','*','*','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','D',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','*'},
+    {'*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*'},
+    };
+    
+    int espinhosAtivos = 1;
+    int chaveF3 = 0;
+    int mx = 22, my = 26;
+    jogadorX = 1; jogadorY = 1;
+    portaAberta = 0;
+    vidas = 3;
+    mx = 22; my = 26;   // Monstro nível 1
+    vx = 27; vy = 35;  // Monstro nível 2
+ 
+    for(int i = 0; i < TAM3; i++) {
+    for(int j = 0; j < TAM3; j++) {
+        mapaF3[i][j] = mapaInicial[i][j];
+    }
+    mapaF3[mx][my] = 'X';
+    mapaF3[i][TAM3] = '\0'; // Terminador de string
+}
+
+    while(1) {
+        system("cls");
+        for(int i = 0; i < TAM3; i++) {
+            printf("%s\n", mapaF3[i]);
+        }
+        printf("Vidas: %d\n", vidas);
+
+        // Verifica se o jogador está na porta e se ela está aberta
+        if((mapaF3[jogadorX][jogadorY] == '=' || (mapaF3[jogadorX][jogadorY] == 'D' && portaAberta))) {
+            system("cls");
+            printf("Voce concluiu o jogo! Parabens!\n");
+            system("pause");
+            finalizarJogo(1);
+            break;
+        }
+
+        // Atualiza a porta para '=' se estiver aberta (mas mantém a posição original)
+        if(portaAberta) {
+            for(int i = 0; i < TAM3; i++) {
+                for(int j = 0; j < TAM3; j++) {
+                    if(mapaInicial[i][j] == 'D') {  // Verifica na posição original
+                        mapaF3[i][j] = '=';
+                    }
+                }
+            }
+        }
+
+        verificarColisaoMonstros();
+
+        if(_kbhit()) {
+            char tecla = _getch();
+            switch(tecla) {
+                case 'w': moverJogadorF3(-1, 0); break;
+                case 's': moverJogadorF3(1, 0); break;
+                case 'a': moverJogadorF3(0, -1); break;
+                case 'd': moverJogadorF3(0, 1); break;
+                case 'i':
+                    for(int dx = -1; dx <= 1; dx++) {
+                        for(int dy = -1; dy <= 1; dy++) {
+                            if(dx != 0 || dy != 0) {
+                                int nx = jogadorX + dx;
+                                int ny = jogadorY + dy;
+                                if(nx >= 0 && nx < TAM3 && ny >= 0 && ny < TAM3) {
+                                    if(mapaF3[nx][ny] == '@') {
+                                        portaAberta = 1;
+                                        mapaF3[nx][ny] = ' ';
+                                        printf("Você pegou a chave! A porta está aberta agora.\n");
+                                        system("pause");
+                                    } else if(mapaF3[nx][ny] == 'O') {
+                                        if(espinhosAtivos) {
+                                            mapaF3[12][8] = ' ';
+                                            mapaF3[15][8] = ' ';
+                                            mapaF3[18][8] = ' ';
+                                            espinhosAtivos = 0;
+                                            printf("Você apertou o botão e os espinhos desapareceram!\n");
+                                        } else {
+                                            printf("O botão já foi ativado anteriormente.\n");
+                                        }
+                                        system("pause");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+         // Movimento do monstro
+       int dir = rand() % 4;
+int mx_novo = mx, my_novo = my;
+if(dir == 0) mx_novo--;
+else if(dir == 1) mx_novo++;
+else if(dir == 2) my_novo--;
+else if(dir == 3) my_novo++;
+// Verifica se o novo local é válido
+if (mapaF3[mx_novo][my_novo] == ' ') {
+    mapaF3[mx][my] = ' ';            // Apaga da posição antiga
+    mx = mx_novo;                    // Atualiza coordenadas
+    my = my_novo;
+    mapaF3[mx][my] = 'X';            // Desenha na nova posição
+}
+
+        moverMonstrosF3();
+        verificarColisaoMonstros();
+        Sleep(100);
+    }
+}
+
+
+	int main(){ 
+    srand(time(NULL));
+    while(1) {
+        system("cls");
+        printf("=== Dungeon Crawler ===\n");
+        printf("1 - Jogar\n2 - Creditos\n3 - Sair\n");
+        char op = _getch();
+        if(op == '1') {
+        	px = 5;
+        	py = 5;
+        	temChave = 0;
+            while(1) {
+                desenha(vila, px, py);
+                printf("Vila - WASD para andar, i para interagir, q para voltar para o menu.\n");
+                char c = _getch();
+                if(c >= 'A' && c <= 'Z') c += 32;
+                if(c == 'q') break;
+                int nx = px, ny = py;
+                if(c == 'w') nx--;
+                else if(c == 's') nx++;
+                else if(c == 'a') ny--;
+                else if(c == 'd') ny++;
+                else if(c == 'i') {
+                    if(interage(vila, px, py)) {
+                        // abriu a porta, vai pra fase 1
+                        fase1();
+                        break;
+                    }
+                    continue;
+                }
+                if(podeMover(vila, nx, ny)) {
+                    px = nx;
+                    py = ny;
+                }
+            }
+        } else if(op == '2') {
+            system("cls");
+            printf("Criado por Edgar Teofilo e Matheus Sa.\n");
+            system("pause");
+        } else if(op == '3') {
+            break;
+        }
+    }
+    return 0;
+	}
