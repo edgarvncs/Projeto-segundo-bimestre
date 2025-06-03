@@ -46,6 +46,8 @@ Apenas os corajosos escapam.
 Apenas os atentos sobrevivem.
 Apenas os dignos despertam o segredo de Elthar.
 
+O jogo deve ser executado através de programas de compilação de códigos c++, para evitar erros.
+
 Este projeto foi fundamental para o nosso desenvolvimento acadêmico, proporcionando aprendizado prático e fortalecendo nossa capacidade de enfrentar desafios em projetos futuros. Ao longo do desenvolvimento do 
 código, contamos com diversas ferramentas que enriqueceram nossa experiência. Entre os principais recursos utilizados, destacam-se o ChatGPT, que foi essencial na resolução de dúvidas técnicas, e as videoaulas do 
 canal Pietro Martins de Oliveira, no YouTube, que serviram como uma base teórica sólida para nosso avanço.
